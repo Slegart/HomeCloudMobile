@@ -6,16 +6,18 @@
  */
 
 import React from 'react';
-import type {PropsWithChildren} from 'react';
+import type { PropsWithChildren } from 'react';
 import {
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
+import axios from 'axios';
 
 import {
   Colors,
@@ -29,7 +31,7 @@ type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
+function Section({ children, title }: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -61,6 +63,12 @@ function App(): React.JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+  const [Response, setResponse] = React.useState('');
+  async function CheckConnection() {
+    const response = await axios.get('http://192.168.1.3:3000');
+    console.log(response);
+    setResponse(response.data);
+  }  
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -76,9 +84,12 @@ function App(): React.JSX.Element {
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
+          <Section title="test button">
+            <TouchableOpacity onPress={CheckConnection}>
+              <Text>Check Connection</Text>
+            </TouchableOpacity>
+
+            {Response && { Response } ? Response : 'No Response'}
           </Section>
           <Section title="See Your Changes">
             <ReloadInstructions />
