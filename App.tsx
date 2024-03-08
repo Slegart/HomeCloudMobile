@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './src/Pages/HomeScreen.tsx'
 import DetailsScreen from './src/Pages/DetailsScreen.tsx'
 import MainScreen from './src/Pages/MainScreen.tsx';
+import UploadScreen from './src/Pages/UploadScreen.tsx';
 
 function App(): React.JSX.Element {
 
@@ -40,6 +41,7 @@ function App(): React.JSX.Element {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Details" component={DetailsScreen} />
       <Stack.Screen name="Main" component={MainScreen} />
+      <Stack.Screen name="Upload" component={UploadScreen} />
     </Stack.Navigator>
   </NavigationContainer>
   );
