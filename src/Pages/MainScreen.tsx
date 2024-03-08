@@ -6,7 +6,7 @@ import DocumentPicker, { DocumentPickerResponse } from 'react-native-document-pi
 
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AuthUtils } from '../Utils/AuthUtils';
-export default function MainScreen({ navigation }) {
+export default function MainScreen({ navigation }:any) {
 
   async function checkstorage() {
     try {

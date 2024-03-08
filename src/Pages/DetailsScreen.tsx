@@ -1,43 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Button, Image } from 'react-native';
 import axios from 'axios';
 import { encode as base64Encode } from 'base-64';
 import { AuthUtils } from '../Utils/AuthUtils';
-const ImageDisplayScreen = () => {
+import { useNavigation } from '@react-navigation/native';
+const DetailsScreen = ({ navigation }:any) => {
+  const navigate = useNavigation();
   const [imageUri, setImageUri] = useState('');
+  const [TotalImages, setTotalImages] = useState(0);
+  const [TotalVideos, setTotalVideos] = useState(0);
+  const [TotalOther, setTotalOther] = useState(0);
 
-  const getImage = async () => {
+  const GetDocumentsSize = async () => {
     try {
       const token = await AuthUtils.GetJWT();
-   
-      const response = await axios.get('http://192.168.1.3:3000/media/getFiles', {
-        params: {
-          Ftype: 'images',
-          Page: 1,
-          PageSize: 5
-        },
-        responseType: 'arraybuffer',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-       
-      const uint8Array = new Uint8Array(response.data);
-      const byteArray = Array.from(uint8Array);
-      const base64Image = base64Encode(String.fromCharCode.apply(null, byteArray));
-
-      setImageUri(`data:image/jpeg;base64,${base64Image}`);
-    } catch (error) {
-      console.error('Error fetching image:', error);
+      if (token === null) return;
+      const response = await axios.get('http://192.168.1.3:3000/media/FilesLength',
+        {
+          headers:
+          {
+            Authorization: 'Bearer ' + token
+          }
+        });
+      console.log(response.data);
+      //Images: 1, Videos: 0, Other: 0
+      setTotalImages(response.data.Images);
+      setTotalVideos(response.data.Videos);
+      setTotalOther(response.data.Other);
     }
-  };
+    catch (error) { console.log(error) }
+  }
+
+  const Start = async () => {
+    await GetDocumentsSize();
+  }
+  useEffect(() => {
+    Start()
+  }, []);
 
   return (
     <View>
-      <Button title="Load Image" onPress={getImage}></Button>
-      {imageUri && <Image source={{ uri: imageUri }} style={{ width: 200, height: 200 }} />}
+
+      <Button
+        title='Images screen'
+        onPress={() => navigation.navigate('Images', { totalImages: TotalImages, })} />
+
     </View>
   );
 };
 
-export default ImageDisplayScreen;
+export default DetailsScreen;

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { UrlParser } from '../Utils/UrlParser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }:any) {
     const [Username, setUsername] = useState<string>('');
     const [Password, setPassword] = useState<string>('');
 

@@ -4,7 +4,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { AuthUtils } from '../Utils/AuthUtils';
 import axios from 'axios';
 
-export default function UploadScreen({ navigation }) {
+export default function UploadScreen({ navigation }:any) {
   const [photo, setPhoto] = React.useState(null);
 
   const createFormData = async (photo) => {
