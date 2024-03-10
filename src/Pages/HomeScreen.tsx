@@ -1,13 +1,17 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput } from 'react-native';
+import { View, Text, Button, TextInput, ToastAndroid } from 'react-native';
 import axios from 'axios';
 import { UrlParser } from '../Utils/UrlParser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen({ navigation }:any) {
-    const [Username, setUsername] = useState<string>('');
-    const [Password, setPassword] = useState<string>('');
+    const [Username, setUsername] = useState<string>('admin');
+    const [Password, setPassword] = useState<string>('admin');
+
+    const showToast = (Message:string) => {
+        ToastAndroid.show(Message, ToastAndroid.SHORT);
+      };
 
     const storeToken = async (token: string) => {
         try {
@@ -31,10 +35,12 @@ export default function HomeScreen({ navigation }:any) {
             }
             else {
                 console.log('Login failed:', response.data.message);
+                showToast(response.data.message)
             }
 
         } catch (error) {
             console.error('Error during login:', error);
+            showToast('Error during login')
         }
     };
 
@@ -45,11 +51,13 @@ export default function HomeScreen({ navigation }:any) {
                 await Login();
             }
             else {
-                console.log('no connection');
+                console.log('No connection');
+                showToast(response.data)
             }
 
         } catch (error) {
             console.error('Error checking connection:', error);
+            showToast('Error checking connection')
         }
     };
 
@@ -68,34 +76,24 @@ export default function HomeScreen({ navigation }:any) {
         retrieveToken();
     }, []);
 
-    async function clearjwt() {
-        try {
-            await AsyncStorage.removeItem('jwtToken');
-            console.log('jwtToken removed');
-        } catch (error) {
-            console.error('Error removing jwtToken:', error);
-        }
-    }
-
     return (
         <View>
             <Text>Home</Text>
             <TextInput
                 placeholder='Username'
+                defaultValue='admin'
                 onChange={(event) => { setUsername(event.nativeEvent.text) }}
             ></TextInput>
             <TextInput
                 placeholder='Password'
+                defaultValue='admin'
                 onChange={(event) => { setPassword(event.nativeEvent.text) }}
             ></TextInput>
             <Button
-                title="Check"
+                title="Login"
                 onPress={() => CheckConnection()}
             />
-               <Button
-                title="clear jwt"
-                onPress={() => clearjwt()}
-            />
+          
         </View>
     );
 }

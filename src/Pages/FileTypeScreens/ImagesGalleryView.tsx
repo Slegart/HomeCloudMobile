@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, Image, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, FlatList, TouchableOpacity, Image, StyleSheet, Text, ActivityIndicator, Dimensions } from 'react-native';
 import { ImageGallery } from '@georstat/react-native-image-gallery';
 import { AuthUtils } from '../../Utils/AuthUtils';
 import axios from 'axios';
@@ -19,14 +19,15 @@ const ImagesGalleryView = ({ route }: any) => {
   const getImages = async (currentPage: number) => {
     try {
       if (LastPageLoaded || loading) {
-        console.log("Last Page Loaded returning or loading");
+        //console.log("Last Page Loaded returning or loading");
         return;
       }
 
       setLoading(true);
 
-      const imageNamesRes = await axios.get(UrlParser(`/media/GetImageNames?page=${currentPage}`), {
+      const imageNamesRes = await axios.get(UrlParser(`/media/GetFileNames`), {
         params: {
+          fileType: 'images',
           PageNo: currentPage,
           PageSize: PageSize,
         },
@@ -40,14 +41,17 @@ const ImagesGalleryView = ({ route }: any) => {
       }
 
       const Token = await AuthUtils.GetJWT();
+      const fileType = 'images';
+      const domain = await UrlParser('/media/serveFile');
       const imageLinks = imageNamesRes.data.map((image: string, index: number) => ({
         id: index + 1,
-        url: `http://192.168.1.3:3000/media/ImageLinks?fileName=${image}&Bearer${Token}`,
+        url: `${domain}?fileName=${image}&fileType=${fileType}&Bearer${Token}`,
+        
       }));
 
       setImagesLinks((prevImages) => [...prevImages, ...imageLinks]);
     } catch (error) {
-      console.error('Error fetching images:', error);
+      //console.error('Error fetching images:', error);
     } finally {
       setLoading(false);
     }
@@ -69,6 +73,7 @@ const ImagesGalleryView = ({ route }: any) => {
 
   const openGallery = (index: number) => {
     setInitialIndex(index);
+
     setIsOpen(true);
   };
 
@@ -76,21 +81,37 @@ const ImagesGalleryView = ({ route }: any) => {
     setIsOpen(false);
   };
 
-  const renderGridItem = ({ item, index }: any) => (
-    <TouchableOpacity onPress={() => openGallery(index)}>
+  const GridItem = React.memo(({ item, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
       <Image source={{ uri: item.url }} style={styles.gridItem} />
     </TouchableOpacity>
+  ));
+  
+  const renderGridItem = ({ item, index }: any) => (
+    <GridItem item={item} onPress={() => openGallery(index)} />
   );
 
   const handleEndReached = useCallback(() => {
     if (LastPageLoaded || loading) {
-      console.log("Last Page Loaded returning or loading");
       return;
     }
 
     setPage((prevPage) => prevPage + 1);
     getImages(page + 1);
   }, [LastPageLoaded, loading, page]);
+
+  useEffect(() => {
+
+    if(initialIndex===null){ return; }
+    if(galleryImages.length<0){ return; }
+    if(initialIndex%10===9 && !LastPageLoaded && totalImages>initialIndex+1)
+    {
+      //console.log("loading next page")
+      setPage((prevPage) => prevPage + 1);
+      getImages(page + 1);
+    }
+
+  }, [initialIndex]);
 
   return (
     <View style={styles.container}>
@@ -113,7 +134,8 @@ const ImagesGalleryView = ({ route }: any) => {
         close={closeGallery}
         isOpen={isOpen}
         images={galleryImages}
-        initialIndex={initialIndex}
+        initialIndex={initialIndex|| undefined}
+        onIndexChange={(index: number) => setInitialIndex(index)}
       />
     </View>
   );
@@ -124,8 +146,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gridItem: {
-    width: 150,
-    height: 150,
+    width: Dimensions.get('window').width / 2 - 10,
+    height: Dimensions.get('window').width / 2 - 10,
     margin: 5,
     resizeMode: 'cover',
   },

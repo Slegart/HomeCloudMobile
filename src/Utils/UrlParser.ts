@@ -9,6 +9,6 @@ export const UrlParser = (path:string) => {
     // const url = isProduction ? LiveUrl : BaseUrl;
      const url = BaseUrl; //testing local
      //const url= LiveUrl; //testing live
-
+    console.log('url:', url + path);
     return url + path;
 }

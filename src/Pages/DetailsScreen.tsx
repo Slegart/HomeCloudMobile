@@ -4,6 +4,7 @@ import axios from 'axios';
 import { encode as base64Encode } from 'base-64';
 import { AuthUtils } from '../Utils/AuthUtils';
 import { useNavigation } from '@react-navigation/native';
+import { UrlParser } from '../Utils/UrlParser';
 const DetailsScreen = ({ navigation }:any) => {
   const navigate = useNavigation();
   const [imageUri, setImageUri] = useState('');
@@ -15,7 +16,7 @@ const DetailsScreen = ({ navigation }:any) => {
     try {
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axios.get('http://192.168.1.3:3000/media/FilesLength',
+      const response = await axios.get(UrlParser('/media/FilesLength'),
         {
           headers:
           {
@@ -41,10 +42,10 @@ const DetailsScreen = ({ navigation }:any) => {
   return (
     <View>
 
-      <Button
+      {/* <Button
         title='Images screen'
-        onPress={() => navigation.navigate('Images', { totalImages: TotalImages, })} />
-
+        onPress={() => navigation.navigate('Images', { totalImages: TotalImages, })} /> */}
+      <Button title='Images Gallery Screen' onPress={() => navigation.navigate('ImagesGallery', { totalImages: TotalImages, })} />
     </View>
   );
 };
