@@ -8,7 +8,7 @@ import RNFS from 'react-native-fs';
 //import RNFetchBlob from 'rn-fetch-blob';
 import BlobUtil from 'react-native-blob-util';
 import { Alert, Modal, Text, Pressable } from 'react-native';
-const DocumentsView = ({ route }: any) => {
+const VideoView = ({ route }: any) => {
   const [documents, setDocuments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,7 +21,7 @@ const DocumentsView = ({ route }: any) => {
       try {
         const response = await axios.get(UrlParser(`/media/GetFileNames`), {
           params: {
-            fileType: 'other',
+            fileType: 'videos',
             PageNo: currentPage,
             PageSize: PageSize,
           },
@@ -66,7 +66,7 @@ const DocumentsView = ({ route }: any) => {
       const response = await axios.get(UrlParser(`/media/serveFile`), {
         params: {
           fileName: fileName,
-          fileType: 'other',
+          fileType: 'videos',
         },
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
@@ -87,21 +87,6 @@ const DocumentsView = ({ route }: any) => {
       download.promise.then((response) => {
         console.log('File downloaded successfully:', response);
       });
-      
-      /*
-      BlobUtil
-      .config({
-        fileCache: true,
-        path: downloadsDirectory,
-        
-      })
-      .fetch('GET', response.request.responseURL)
-      
-      .then((res) => {
-        console.log('The file saved to ', res.path());
-      })
-      */
-
 
       showToast('File downloaded successfully');
       setModalVisible(!modalVisible);
@@ -223,4 +208,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DocumentsView;
+export default VideoView;

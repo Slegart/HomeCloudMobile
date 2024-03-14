@@ -1,9 +1,12 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthUtils } from '../Utils/AuthUtils';
+import { UrlParser } from '../Utils/UrlParser';
 export default function MainScreen({ navigation }: any) {
   const [TotalImages, setTotalImages] = useState(0);
   const [TotalVideos, setTotalVideos] = useState(0);
@@ -12,9 +15,10 @@ export default function MainScreen({ navigation }: any) {
 
   const GetDocumentsSize = async () => {
     try {
+      console.log('GetDocumentsSize');
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axios.get('http://192.168.1.3:3000/media/FilesLength',
+      const response = await axios.get(UrlParser(`/media/FilesLength`), 
         {
           headers:
           {
@@ -33,9 +37,14 @@ export default function MainScreen({ navigation }: any) {
   const Start = async () => {
     await GetDocumentsSize();
   }
-  useEffect(() => {
-    Start()
-  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      Start();
+      return () => {
+      };
+    }, [])
+  );
 
   return (
     <View style={styles.verticalContainer}>
@@ -51,16 +60,30 @@ export default function MainScreen({ navigation }: any) {
       </TouchableOpacity>
 
       {/* Gallery */}
+      <View style={styles.galleryVideoContainer}>
+      {/* Gallery */}
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('ImagesGallery', { totalImages: TotalImages, })}
+        style={[styles.button, { flex: 1 }]}
+        onPress={() => navigation.navigate('ImagesGallery', { totalImages: TotalImages })}
       >
-        <View style={styles.verticalContainer}>
+        <View style={styles.buttonContainer}>
           <MaterialCommunityIcons name="view-gallery-outline" size={50} color="white" />
           <Text style={styles.buttonText}>Cloud Gallery</Text>
         </View>
-
       </TouchableOpacity>
+
+      {/* Video */}
+      <TouchableOpacity
+        style={[styles.button, { flex: 1 }]}
+        onPress={() => navigation.navigate('Video')} 
+      >
+        <View style={styles.buttonContainer}>
+          <AntIcon name="videocamera" size={50} color="white" />
+          <Text style={styles.buttonText}>Video</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+
 
       {/* Documents */}
       <TouchableOpacity
@@ -94,6 +117,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  galleryVideoContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
   },
   verticalContainer:
   {

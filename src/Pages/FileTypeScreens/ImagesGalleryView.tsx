@@ -7,8 +7,13 @@ import { UrlParser } from '../../Utils/UrlParser';
 
 const ImagesGalleryView = ({ route }: any) => {
   const { totalImages, totalVideos, totalOther } = route.params;
+
   const [imagesLinks, setImagesLinks] = useState<string[]>([]);
+  const [imagesLinksThumbNails, setImagesLinksThumbNails] = useState<string[]>([]);
+
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [thumbNailImages, setThumbNailImages] = useState<any[]>([]);
+  
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const PageSize = 10;
@@ -42,14 +47,22 @@ const ImagesGalleryView = ({ route }: any) => {
 
       const Token = await AuthUtils.GetJWT();
       const fileType = 'images';
-      const domain = await UrlParser('/media/serveFile');
-      const imageLinks = imageNamesRes.data.map((image: string, index: number) => ({
+      const domain = await UrlParser('/media/serveImage');
+      const imageLinksThumb = await imageNamesRes.data.map((image: string, index: number) => ({
         id: index + 1,
-        url: `${domain}?fileName=${image}&fileType=${fileType}&Bearer${Token}`,
+        url: `${domain}?fileName=${image}&IsThumbnail=true&fileType=${fileType}&Bearer${Token}`,
         
       }));
 
+      const imageLinks = await imageNamesRes.data.map((image: string, index: number) => ({
+        id: index + 1,
+        url: `${domain}?fileName=${image}&IsThumbnail=false&fileType=${fileType}&Bearer${Token}`,
+      }));
+
+      setImagesLinksThumbNails((prevImagesT) => [...prevImagesT, ...imageLinksThumb]);
       setImagesLinks((prevImages) => [...prevImages, ...imageLinks]);
+      console.log("imageLinks:",imageLinks)
+      console.log("imageLinksThumb:",imageLinksThumb)
     } catch (error) {
       //console.error('Error fetching images:', error);
     } finally {
@@ -67,7 +80,13 @@ const ImagesGalleryView = ({ route }: any) => {
     const formattedImages = imagesLinks.map((image, index) => ({
       id: `${index + 1}`,
       url: image.url,
+      //thumbUrl: imagesLinksThumbNails[index].url,
     }));
+    const SmallImagesFormatted = imagesLinksThumbNails.map((image, index) => ({
+      id: `${index + 1}`,
+      url: image.url,
+    }));
+    setThumbNailImages(SmallImagesFormatted);
     setGalleryImages(formattedImages);
   }, [imagesLinks]);
 
@@ -104,7 +123,7 @@ const ImagesGalleryView = ({ route }: any) => {
 
     if(initialIndex===null){ return; }
     if(galleryImages.length<0){ return; }
-    if(initialIndex%10===9 && !LastPageLoaded && totalImages>initialIndex+1)
+    if(initialIndex%PageSize===PageSize-1 && !LastPageLoaded && totalImages>initialIndex+1)
     {
       //console.log("loading next page")
       setPage((prevPage) => prevPage + 1);
@@ -117,7 +136,7 @@ const ImagesGalleryView = ({ route }: any) => {
     <View style={styles.container}>
       <Text style={styles.headerText}>{totalImages} Images Found</Text>
       <FlatList
-        data={galleryImages}
+        data={thumbNailImages}
         renderItem={renderGridItem}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}

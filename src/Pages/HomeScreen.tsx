@@ -30,6 +30,7 @@ export default function HomeScreen({ navigation }:any) {
             if (response.data.success === true) {
                 const jwtToken = response.data.access_token;
                 await storeToken(jwtToken);
+                GetSettings(jwtToken);
                 navigation.navigate('Main');
                 console.log('JWT Token:', jwtToken);
             }
@@ -44,20 +45,38 @@ export default function HomeScreen({ navigation }:any) {
         }
     };
 
+const GetSettings = (token: string) => {
+    axios.get(UrlParser('/settings/GetSettings'), {
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    .then((response) => {
+        const settings = response.data;
+        AsyncStorage.setItem('settings', JSON.stringify(settings));
+    })
+    .catch((error) => {
+        console.error('Error getting settings:', error);
+    });
+}
+
+    
+
     const CheckConnection = async () => {
+        console.log('Checking connection');
         try {
             const response = await axios.get(UrlParser('/auth/Connection'));
+            console.log('Connection response:', response);
             if (response.data === 'Connected') {
                 await Login();
             }
             else {
                 console.log('No connection');
-                showToast(response.data)
+                const resp = "response: " + response.data;
+                showToast(resp);
             }
 
         } catch (error) {
             console.error('Error checking connection:', error);
-            showToast('Error checking connection')
+            showToast((error as Error).message);
         }
     };
 
