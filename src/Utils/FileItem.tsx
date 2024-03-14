@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import * as mime from 'react-native-mime-types';
 import AntIcon from 'react-native-vector-icons/AntDesign';
@@ -6,6 +6,7 @@ import FontAwesome5Icons from 'react-native-vector-icons/FontAwesome5';
 import FontAwesomeIcons from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import RNFS from 'react-native-fs';
 
 interface FileItemProps {
   fileName: string;
@@ -13,6 +14,19 @@ interface FileItemProps {
 }
 
 const FileItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
+  const [isDownloaded, setIsDownloaded] = useState(false);
+
+  useEffect(() => {
+    const checkFileExists = async () => {
+      const downloadsDirectory =RNFS.DownloadDirectoryPath;
+      const filePath = `${downloadsDirectory}/${fileName}`;
+      const exists = await RNFS.exists(filePath);
+      setIsDownloaded(exists);
+    };
+
+    checkFileExists();
+  }, [fileName,onPress]);
+
   const fileType = mime.lookup(fileName);
   const fileExtension = typeof fileType === 'string' ? fileType.split('/')[1] : null;
 
@@ -46,14 +60,16 @@ const FileItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
   };
 
   return (
-    <TouchableOpacity onPress={onPress}>
-      <View style={styles.container}>
+    <TouchableOpacity onPress={onPress }>
+      <View style={isDownloaded ? styles.containerDownloaded : styles.container}>
         <View style={styles.iconContainer}>{renderIcon()}</View>
-        <View >
+        <View>
           <Text numberOfLines={1} style={styles.fileNameText}>
-            {fileName}
+            {fileName.length > 20
+              ? fileName.substring(0, 15) + '...' + fileName.substring(fileName.length - 15, fileName.length)
+              : fileName}
           </Text>
-         </View>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -68,6 +84,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: 'row',
   },
+  containerDownloaded: {
+    alignItems: 'center',
+    margin: 10,
+    backgroundColor: 'lightgreen',
+    padding: 10,
+    borderRadius: 10,
+    flexDirection: 'row',
+  },
+
   iconContainer: {
     marginRight: 10,
   },
