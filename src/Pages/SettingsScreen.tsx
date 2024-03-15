@@ -1,16 +1,18 @@
 import axios from 'axios';
+import axiosInstance from '../Utils/axiosInstance';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, ToastAndroid } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ToastAndroid, Button } from 'react-native';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import { AuthUtils } from '../Utils/AuthUtils';
 import { UrlParser } from '../Utils/UrlParser';
 import DocSize from '../Utils/DocSize';
-const SettingsScreen = ({ navigation }: any) => {
+export default function SettingsScreen ({ navigation }: any) {
     const [isDropdownVisible, setDropdownVisible] = useState(false);
     const [selectedValue, setSelectedValue] = useState(null);
     const [isCancelAvailable, setCancelAvailable] = useState(false);
     const [showDeleteButton, setShowDeleteButton] = useState(false);
     const [itemStatsVisible, setItemStatsVisible] = useState(false);
+    const [EditPreferencesVisible, setEditPreferencesVisible] = useState(true);
     const [documents, setDocuments] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -33,7 +35,7 @@ const SettingsScreen = ({ navigation }: any) => {
             setDocumentsSize(DocSize(response.data.Other));
             setDocuments(response.data);
         } catch (error) {
-            console.error('Error fetching documents:', error);
+            //console.error('Error fetching documents:', error);
         } finally {
             setLoading(false);
         }
@@ -46,12 +48,13 @@ const SettingsScreen = ({ navigation }: any) => {
 
     const handleDropdownPress = () => {
         setDropdownVisible(true);
-        setItemStatsVisible(true);
         setCancelAvailable(true);
+        setEditPreferencesVisible(false);
     };
 
     const OptionPress = (option) => {
         setSelectedValue(option);
+        setItemStatsVisible(true);
         setDropdownVisible(false);
         if (dropdownOptions.includes(option)) {
             setShowDeleteButton(true);
@@ -64,7 +67,7 @@ const SettingsScreen = ({ navigation }: any) => {
     const DeleteItems = async() => {
         setLoading(true);
         try {
-            const response = await axios.get(UrlParser('/media/deleteAllFiles'), {
+            const response = await axiosInstance.get(UrlParser('/media/deleteAllFiles'), {
                 params: {
                     fileType: selectedValue.toLowerCase()
                 },
@@ -72,7 +75,6 @@ const SettingsScreen = ({ navigation }: any) => {
                     "Authorization" : "Bearer " + await AuthUtils.GetJWT()
                 }
             });
-            console.log('Response:', response.data);
             if(response.data === 'Success') {
             setSelectedValue(null);
             setShowDeleteButton(false);
@@ -131,6 +133,7 @@ const SettingsScreen = ({ navigation }: any) => {
                         style={[styles.button, { backgroundColor: 'red' }]}
                         onPress={() => {
                             DeleteItems();
+                            setEditPreferencesVisible(true);
                         }}
                     >
                         <View style={styles.verticalContainer}>
@@ -144,6 +147,7 @@ const SettingsScreen = ({ navigation }: any) => {
                         onPress={() => {
                             setShowDeleteButton(false);
                             setSelectedValue(null);
+                            setEditPreferencesVisible(true);
                         }}
                     >
                         <View style={styles.verticalContainer}>
@@ -170,7 +174,7 @@ const SettingsScreen = ({ navigation }: any) => {
                     {isCancelAvailable && (
                         <TouchableOpacity
                             style={styles.CancelButton}
-                            onPress={() => setDropdownVisible(false)}
+                            onPress={() => {setDropdownVisible(false); setItemStatsVisible(false); setCancelAvailable(false); setEditPreferencesVisible(true);} }
                         >
                             <Text>Cancel</Text>
                         </TouchableOpacity>
@@ -178,11 +182,9 @@ const SettingsScreen = ({ navigation }: any) => {
                 </View>
             </Modal>
 
-            <View>
-            <TouchableOpacity style={styles.dropdownButton} onPress={navigation.navigate('Preferences')}>
-                    <Text>Edit Preferences</Text>
-                </TouchableOpacity>
-            </View>
+            {EditPreferencesVisible && <View>
+            <Button title="Edit Preferences" onPress={() => navigation.navigate('Preferences')} />
+            </View>}
 
         </>
 
@@ -214,6 +216,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: '20%',
         width: '100%',
+        padding: 10,
     },
     button: {
         flexDirection: 'row',
@@ -251,6 +254,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         width: 200,
         alignItems: 'center',
+        borderRadius: 10,
     },
     CancelButton: {
         backgroundColor: 'white',
@@ -261,4 +265,3 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SettingsScreen;

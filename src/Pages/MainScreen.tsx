@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../Utils/axiosInstance';
 import React, { useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -15,18 +15,16 @@ export default function MainScreen({ navigation }: any) {
 
   const GetDocumentsSize = async () => {
     try {
-      console.log('GetDocumentsSize');
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axios.get(UrlParser(`/media/FilesLength`), 
+      const response = await axiosInstance.get(UrlParser(`/media/FilesLength`), 
         {
           headers:
           {
             Authorization: 'Bearer ' + token
           }
         });
-      console.log(response.data);
-      //Images: 1, Videos: 0, Other: 0
+      //Images: 0, Videos: 0, Other: 0
       setTotalImages(response.data.Images);
       setTotalVideos(response.data.Videos);
       setTotalOther(response.data.Other);
@@ -75,7 +73,7 @@ export default function MainScreen({ navigation }: any) {
       {/* Video */}
       <TouchableOpacity
         style={[styles.button, { flex: 1 }]}
-        onPress={() => navigation.navigate('Video')} 
+        onPress={() => navigation.navigate('Video', { totalVideos: TotalVideos})}
       >
         <View style={styles.buttonContainer}>
           <AntIcon name="videocamera" size={50} color="white" />
@@ -88,7 +86,7 @@ export default function MainScreen({ navigation }: any) {
       {/* Documents */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Documents')}
+        onPress={() => navigation.navigate('Documents' , { totalOther: TotalOther })}
       >
         <View style={styles.verticalContainer}>
           <AntIcon name="filetext1" size={50} color="white" />

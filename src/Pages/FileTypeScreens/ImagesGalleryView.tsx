@@ -3,6 +3,7 @@ import { View, FlatList, TouchableOpacity, Image, StyleSheet, Text, ActivityIndi
 import { ImageGallery } from '@georstat/react-native-image-gallery';
 import { AuthUtils } from '../../Utils/AuthUtils';
 import axios from 'axios';
+import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
 
 const ImagesGalleryView = ({ route }: any) => {
@@ -30,7 +31,7 @@ const ImagesGalleryView = ({ route }: any) => {
 
       setLoading(true);
 
-      const imageNamesRes = await axios.get(UrlParser(`/media/GetFileNames`), {
+      const imageNamesRes = await axiosInstance.get(UrlParser(`/media/GetFileNames`), {
         params: {
           fileType: 'images',
           PageNo: currentPage,

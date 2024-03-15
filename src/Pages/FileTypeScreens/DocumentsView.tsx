@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import { View, FlatList, ActivityIndicator, StyleSheet, Dimensions, ToastAndroid, Platform } from 'react-native';
 import axios from 'axios';
+import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
 import { AuthUtils } from '../../Utils/AuthUtils';
 import FileItem from '../../Utils/FileItem';
@@ -9,36 +10,37 @@ import RNFS from 'react-native-fs';
 import BlobUtil from 'react-native-blob-util';
 import { Alert, Modal, Text, Pressable } from 'react-native';
 const DocumentsView = ({ route }: any) => {
+  const { TotalOther } = route.params;
   const [documents, setDocuments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedFileName, setselectedFileName] = useState('');
-  const PageSize = 10;
   const [modalVisible, setModalVisible] = useState(false);
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(UrlParser(`/media/GetFileNames`), {
-          params: {
-            fileType: 'other',
-            PageNo: currentPage,
-            PageSize: PageSize,
-          },
-          headers: {
-            Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
-          },
-        });
-        setDocuments(response.data);
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const PageSize = 20;
+  const [LastPageLoaded, setLastPageLoaded] = useState(false);
+  const totalPages = Math.ceil(TotalOther / PageSize)+1;
 
-    fetchDocuments();
-  }, []);
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(UrlParser(`/media/GetFileNames`), {
+        params: {
+          fileType: 'other',
+          PageNo: currentPage,
+          PageSize: PageSize,
+        },
+        headers: {
+          Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
+        },
+      });
+      setDocuments(prevDocuments => [...prevDocuments, ...response.data]);
+    } catch (error) {
+      console.log('Error fetching documents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDocumentClick = async (fileName: string) => {
     console.log('Document clicked:', fileName);
@@ -63,7 +65,7 @@ const DocumentsView = ({ route }: any) => {
   const DownloadFile = async (fileName: string) => {
     try {
       console.log('Downloading file:', fileName);
-      const response = await axios.get(UrlParser(`/media/serveFile`), {
+      const response = await axiosInstance.get(UrlParser(`/media/serveFile`), {
         params: {
           fileName: fileName,
           fileType: 'other',
@@ -72,7 +74,6 @@ const DocumentsView = ({ route }: any) => {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
       });
-      console.log('Response:', response.request.responseURL);
 
       const downloadsDirectory =RNFS.DownloadDirectoryPath;
       console.log('downloadsDirectory:', downloadsDirectory);
@@ -87,22 +88,7 @@ const DocumentsView = ({ route }: any) => {
       download.promise.then((response) => {
         console.log('File downloaded successfully:', response);
       });
-      
-      /*
-      BlobUtil
-      .config({
-        fileCache: true,
-        path: downloadsDirectory,
-        
-      })
-      .fetch('GET', response.request.responseURL)
-      
-      .then((res) => {
-        console.log('The file saved to ', res.path());
-      })
-      */
-
-
+   
       showToast('File downloaded successfully');
       setModalVisible(!modalVisible);
       setselectedFileName('');
@@ -116,9 +102,25 @@ const DocumentsView = ({ route }: any) => {
     ToastAndroid.show(Message, ToastAndroid.SHORT);
   };
   
-  const renderDocumentItem = ({ item }: { item: string }) => (
+  const renderDocumentItem = ({ item }: { item: string }) => ( 
     <FileItem fileName={item} onPress={() => handleDocumentClick(item)} />
   );
+
+  const handleEndReached = useCallback(() => {
+    if (LastPageLoaded || loading || currentPage >= totalPages) {
+      console.log('Last Page Loaded or loading or all pages fetched');
+      return;
+    }
+    setCurrentPage(prevPage => prevPage + 1);
+    if(currentPage >= totalPages){
+      setLastPageLoaded(true);
+    }
+    console.log("current page: fallback:", currentPage);
+    console.log('End reached');
+  }, [LastPageLoaded, loading, currentPage]);
+  useEffect(() => {
+    fetchDocuments();
+  }, [currentPage]);
 
   return (
     <>
@@ -128,6 +130,8 @@ const DocumentsView = ({ route }: any) => {
           renderItem={renderDocumentItem}
           keyExtractor={(item) => item}
           numColumns={1}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1}
         />
 
         {loading && (

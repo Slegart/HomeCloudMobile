@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Button, Image } from 'react-native';
-import axios from 'axios';
-import { encode as base64Encode } from 'base-64';
+import axiosInstance from '../Utils/axiosInstance';
 import { AuthUtils } from '../Utils/AuthUtils';
 import { useNavigation } from '@react-navigation/native';
 import { UrlParser } from '../Utils/UrlParser';
@@ -16,15 +15,14 @@ const DetailsScreen = ({ navigation }:any) => {
     try {
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axios.get(UrlParser('/media/FilesLength'),
+      const response = await axiosInstance.get(UrlParser('/media/FilesLength'),
         {
           headers:
           {
             Authorization: 'Bearer ' + token
           }
         });
-      console.log(response.data);
-      //Images: 1, Videos: 0, Other: 0
+      //Images: 0, Videos: 0, Other: 0
       setTotalImages(response.data.Images);
       setTotalVideos(response.data.Videos);
       setTotalOther(response.data.Other);

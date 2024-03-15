@@ -2,6 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { View, Text, Button, TextInput, ToastAndroid } from 'react-native';
 import axios from 'axios';
+import axiosInstance from '../Utils/axiosInstance';
 import { UrlParser } from '../Utils/UrlParser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,7 +24,7 @@ export default function HomeScreen({ navigation }:any) {
 
     const Login = async () => {
         try {
-            const response = await axios.post(UrlParser('/auth/login'), {
+            const response = await axiosInstance.post(UrlParser('/auth/login'), {
                 username: Username,
                 password: Password
             });
@@ -46,7 +47,7 @@ export default function HomeScreen({ navigation }:any) {
     };
 
 const GetSettings = (token: string) => {
-    axios.get(UrlParser('/settings/GetSettings'), {
+    axiosInstance.get(UrlParser('/settings/GetSettings'), {
         headers: { Authorization: `Bearer ${token}` }
     })
     .then((response) => {
@@ -63,15 +64,10 @@ const GetSettings = (token: string) => {
     const CheckConnection = async () => {
         console.log('Checking connection');
         try {
-            const response = await axios.get(UrlParser('/auth/Connection'));
+            const response = await axiosInstance.get(UrlParser('/auth/Connection'));
             console.log('Connection response:', response);
             if (response.data === 'Connected') {
                 await Login();
-            }
-            else {
-                console.log('No connection');
-                const resp = "response: " + response.data;
-                showToast(resp);
             }
 
         } catch (error) {
