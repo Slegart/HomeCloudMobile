@@ -1,57 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, ActivityIndicator, StyleSheet, Dimensions, ToastAndroid, Platform } from 'react-native';
+import React, { useState, useEffect,useCallback } from 'react';
+import { View, FlatList, ActivityIndicator, StyleSheet, Dimensions, ToastAndroid, Platform, Image } from 'react-native';
 import axios from 'axios';
+import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
 import { AuthUtils } from '../../Utils/AuthUtils';
-import FileItem from '../../Utils/FileItem';
+import VideoItem from '../../Utils/VideoItem';
 import RNFS from 'react-native-fs';
-//import RNFetchBlob from 'rn-fetch-blob';
 import BlobUtil from 'react-native-blob-util';
 import { Alert, Modal, Text, Pressable } from 'react-native';
-const VideoView = ({ route }: any) => {
-  const [documents, setDocuments] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFileName, setselectedFileName] = useState('');
-  const PageSize = 10;
-  const [modalVisible, setModalVisible] = useState(false);
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(UrlParser(`/media/GetFileNames`), {
-          params: {
-            fileType: 'videos',
-            PageNo: currentPage,
-            PageSize: PageSize,
-          },
-          headers: {
-            Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
-          },
-        });
-        setDocuments(response.data);
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchDocuments();
-  }, []);
+const VideoView = ({ route }: any) => {
+  const {  totalVideos } = route.params;
+
+  const [videos, setVideos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [selectedFileName, setselectedFileName] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const PageSize = 5;
+  const [LastPageLoaded, setLastPageLoaded] = useState(false);
+  const totalPages = Math.ceil(totalVideos / PageSize)+1;
+
+  const GetVideoFiles = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(UrlParser(`/media/GetFileNames`), {
+        params: {
+          fileType: 'videos',
+          PageNo: currentPage,
+          PageSize: PageSize,
+        },
+        headers: {
+          Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
+        },
+      });
+    setVideos(prevVideos => [...prevVideos, ...response.data]);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    } finally {
+      setLoading(false);
+      //GetVideoThumbnails();
+    }
+  };
 
   const handleDocumentClick = async (fileName: string) => {
     console.log('Document clicked:', fileName);
     if (fileName) {
-      const downloadsDirectory =RNFS.DownloadDirectoryPath;
+      const downloadsDirectory = RNFS.DownloadDirectoryPath;
       const filePath = `${downloadsDirectory}/${fileName}`;
       const exists = await RNFS.exists(filePath);
-      if(exists){
+      if (exists) {
         console.log('File exists:', filePath);
-       BlobUtil.android.actionViewIntent(filePath, 'application/*');
+        BlobUtil.android.actionViewIntent(filePath, 'application/*');
       }
-      else
-      {
+      else {
         console.log('File does not exist:', filePath);
         setModalVisible(true);
       }
@@ -63,7 +67,7 @@ const VideoView = ({ route }: any) => {
   const DownloadFile = async (fileName: string) => {
     try {
       console.log('Downloading file:', fileName);
-      const response = await axios.get(UrlParser(`/media/serveFile`), {
+      const response = await axiosInstance.get(UrlParser(`/media/serveFile`), {
         params: {
           fileName: fileName,
           fileType: 'videos',
@@ -72,9 +76,8 @@ const VideoView = ({ route }: any) => {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
       });
-      console.log('Response:', response.request.responseURL);
 
-      const downloadsDirectory =RNFS.DownloadDirectoryPath;
+      const downloadsDirectory = RNFS.DownloadDirectoryPath;
       console.log('downloadsDirectory:', downloadsDirectory);
 
       const filePath = `${downloadsDirectory}/${fileName}`;
@@ -96,23 +99,44 @@ const VideoView = ({ route }: any) => {
     }
   };
 
-
-  const showToast = (Message:string) => {
+  const showToast = (Message: string) => {
     ToastAndroid.show(Message, ToastAndroid.SHORT);
   };
-  
-  const renderDocumentItem = ({ item }: { item: string }) => (
-    <FileItem fileName={item} onPress={() => handleDocumentClick(item)} />
-  );
 
+  const renderVideoItem = ({ item }: { item: string }) => {
+    return (
+      <VideoItem
+        fileName={item}
+        onPress={() => handleDocumentClick(item)}
+      />
+    );
+  };
+
+  const handleEndReached = useCallback(() => {
+    if (LastPageLoaded || loading || currentPage >= totalPages) {
+      console.log('Last Page Loaded or loading or all pages fetched');
+      return;
+    }
+    setCurrentPage(prevPage => prevPage + 1);
+    if(currentPage >= totalPages){
+      setLastPageLoaded(true);
+    }
+    console.log("current page: fallback:", currentPage);
+    console.log('End reached');
+  }, [LastPageLoaded, loading, currentPage]);
+  useEffect(() => {
+    GetVideoFiles();
+  }, [currentPage]);
   return (
     <>
       <View style={styles.container}>
         <FlatList
-          data={documents}
-          renderItem={renderDocumentItem}
+          data={videos}
+          renderItem={renderVideoItem}
           keyExtractor={(item) => item}
           numColumns={1}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1}
         />
 
         {loading && (
@@ -121,9 +145,9 @@ const VideoView = ({ route }: any) => {
           </View>
         )}
       </View>
-      { modalVisible && <View style={styles.centeredView}>
+      {modalVisible && <View style={styles.centeredView}>
         <Modal
-     transparent={true}
+          transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.');
@@ -146,6 +170,7 @@ const VideoView = ({ route }: any) => {
           </View>
         </Modal>
       </View>}
+
     </>
   );
 };

@@ -13,31 +13,9 @@ import UploadScreen from './src/Pages/UploadScreen.tsx';
 import ImagesGalleryView from './src/Pages/FileTypeScreens/ImagesGalleryView.tsx';
 import DocumentsView from './src/Pages/FileTypeScreens/DocumentsView.tsx';
 import SettingsScreen from './src/Pages/SettingsScreen.tsx';
-
-
+import PreferencesScreen from './src/Pages/PreferencesScreen.tsx';
+import VideoView from './src/Pages/FileTypeScreens/VideoView.tsx';
 function App(): React.JSX.Element {
-
-  const [Response, setResponse] = React.useState('');
-  async function CheckConnection() {
-    try {
-
-      //const response = await axios.post('http://localhost:3000/auth/login', {   
-      const response = await axios.post(UrlParser('/auth/login'), {
-        username: 'admin',
-        password: 'admin',
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log(response.data);
-      const token = response.data.access_token;
-      setResponse(token);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
 
   const Stack = createNativeStackNavigator();
 
@@ -51,6 +29,8 @@ function App(): React.JSX.Element {
         <Stack.Screen name="ImagesGallery" component={ImagesGalleryView} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Documents" component={DocumentsView} />
+        <Stack.Screen name="Preferences" component={PreferencesScreen} />
+        <Stack.Screen name="Video" component={VideoView} />
       </Stack.Navigator>
     </NavigationContainer>
   );

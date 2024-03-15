@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
 import * as mime from 'react-native-mime-types';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import BlobUtil from 'react-native-blob-util';
+import { UrlParser } from './UrlParser';
+import axios from 'axios';
+import { AuthUtils } from './AuthUtils';
 
 interface FileItemProps {
   fileName: string;
+
   onPress: () => void;
 }
 
 const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [imageData, setImageData] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const checkFileExists = async () => {
@@ -18,9 +23,31 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
       const exists = await BlobUtil.fs.exists(path);
       setIsDownloaded(exists);
     };
-
     checkFileExists();
   }, [fileName,onPress]);
+  useEffect(()=>{
+    GetVideoThumbnails(fileName);
+  },[]);
+
+  const GetVideoThumbnails = async (fileName:string) => {
+    try {
+      const response = await axios.get(UrlParser(`/media/videothumbnails`), {
+        params: {
+          fileType: 'videos',
+          fileName: fileName,
+        },
+        headers: {
+          Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
+        },
+      });
+    
+      const imageDataObject = {};
+      imageDataObject[fileName] = response.data
+      setImageData(imageDataObject);
+    } catch (error) {
+      console.error('Error fetching image data:', error);
+    }
+  };
 
   const fileType = mime.lookup(fileName);
   const fileExtension = typeof fileType === 'string' ? fileType.split('/')[1] : null;
@@ -54,6 +81,14 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
               ? fileName.substring(0, 15) + '...' + fileName.substring(fileName.length - 15, fileName.length)
               : fileName}
           </Text>
+          {imageData ? (
+            <Image
+              source={{ uri: `data:image/png;base64,${imageData[fileName]}` }}
+              style={{ width: 200, height: 200 }}
+            />
+          ) : (
+            <Text>Loading...</Text>
+          )}
         </View>
       </View>
     </TouchableOpacity>
