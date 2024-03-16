@@ -1,14 +1,12 @@
-import axios from 'axios';
 import axiosInstance from '../Utils/axiosInstance';
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ToastAndroid, Button } from 'react-native';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import { AuthUtils } from '../Utils/AuthUtils';
-import { UrlParser } from '../Utils/UrlParser';
 import DocSize from '../Utils/DocSize';
 export default function SettingsScreen ({ navigation }: any) {
     const [isDropdownVisible, setDropdownVisible] = useState(false);
-    const [selectedValue, setSelectedValue] = useState(null);
+    const [selectedValue, setSelectedValue] = useState<string | null>(null);
     const [isCancelAvailable, setCancelAvailable] = useState(false);
     const [showDeleteButton, setShowDeleteButton] = useState(false);
     const [itemStatsVisible, setItemStatsVisible] = useState(false);
@@ -24,7 +22,7 @@ export default function SettingsScreen ({ navigation }: any) {
         const fetchDocuments = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(UrlParser(`/media/GetAllFilesStats`), {
+            const response = await axiosInstance.get(`/media/GetAllFilesStats`, {
                 headers: {
                     Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
                 },
@@ -52,7 +50,7 @@ export default function SettingsScreen ({ navigation }: any) {
         setEditPreferencesVisible(false);
     };
 
-    const OptionPress = (option) => {
+    const OptionPress = (option:string) => {
         setSelectedValue(option);
         setItemStatsVisible(true);
         setDropdownVisible(false);
@@ -67,19 +65,21 @@ export default function SettingsScreen ({ navigation }: any) {
     const DeleteItems = async() => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get(UrlParser('/media/deleteAllFiles'), {
-                params: {
-                    fileType: selectedValue.toLowerCase()
-                },
-                headers: {
-                    "Authorization" : "Bearer " + await AuthUtils.GetJWT()
+            if(selectedValue)
+            {
+                const response = await axiosInstance.get('/media/deleteAllFiles', {
+                    params: {
+                        fileType: (selectedValue as string).toLowerCase()
+                    },
+                    headers: {
+                        "Authorization" : "Bearer " + await AuthUtils.GetJWT()
+                    }
+                });
+                if (response.data === 'Success') {
+                    setSelectedValue(null);
+                    setShowDeleteButton(false);
+                    showToast('Files deleted successfully');
                 }
-            });
-            if(response.data === 'Success') {
-            setSelectedValue(null);
-            setShowDeleteButton(false);
-            showToast('Files deleted successfully');
-            
             }
         } catch (error) {
             console.error('Error deleting documents:', error);

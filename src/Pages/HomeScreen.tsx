@@ -1,9 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { View, Text, Button, TextInput, ToastAndroid } from 'react-native';
-import axios from 'axios';
 import axiosInstance from '../Utils/axiosInstance';
-import { UrlParser } from '../Utils/UrlParser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen({ navigation }:any) {
@@ -24,7 +22,7 @@ export default function HomeScreen({ navigation }:any) {
 
     const Login = async () => {
         try {
-            const response = await axiosInstance.post(UrlParser('/auth/login'), {
+            const response = await axiosInstance.post('/auth/login', {
                 username: Username,
                 password: Password
             });
@@ -47,7 +45,7 @@ export default function HomeScreen({ navigation }:any) {
     };
 
 const GetSettings = (token: string) => {
-    axiosInstance.get(UrlParser('/settings/GetSettings'), {
+    axiosInstance.get('/settings/GetSettings', {
         headers: { Authorization: `Bearer ${token}` }
     })
     .then((response) => {
@@ -64,7 +62,7 @@ const GetSettings = (token: string) => {
     const CheckConnection = async () => {
         console.log('Checking connection');
         try {
-            const response = await axiosInstance.get(UrlParser('/auth/Connection'));
+            const response = await axiosInstance.get('/auth/Connection');
             console.log('Connection response:', response);
             if (response.data === 'Connected') {
                 await Login();

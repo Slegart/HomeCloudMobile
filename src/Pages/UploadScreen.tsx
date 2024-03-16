@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Button, ToastAndroid } from 'react-native';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera, ImageLibraryOptions } from 'react-native-image-picker';
 import DocumentPicker, { DocumentPickerResponse } from 'react-native-document-picker';
-import { UrlParser } from '../Utils/UrlParser';
 import { AuthUtils } from '../Utils/AuthUtils';
-import axios from 'axios';
+import axiosInstance from '../Utils/axiosInstance';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import DocSize from '../Utils/DocSize';
@@ -55,7 +54,7 @@ const handleUpload = async (file: any, setFile: any, type: string) => {
     const token = await AuthUtils.GetJWT();
     const data = await createFormData(file, type);
 
-    const response = await axios.post(UrlParser('/media/upload'), data, {
+    const response = await axiosInstance.post('/media/upload', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
@@ -91,8 +90,12 @@ export default function UploadScreen({ navigation }: any) {
   const [document, setDocument] = useState<DocumentPickerResponse | null>(null);
   const [DocumentUploadReady, setDocumentUploadReady] = useState(false);
 
+  const options: ImageLibraryOptions = {
+    mediaType: 'photo', 
+};
   const handleChoosePhoto = () => {
-    launchImageLibrary({ noData: true }, (response) => {
+    // launchImageLibrary({ noData: true }, (response) => {
+    launchImageLibrary(options, (response) => {
       handleImagePickerResponse(response, setPhoto).then(() => {
         setDocumentUploadReady(true);
       });
@@ -101,7 +104,7 @@ export default function UploadScreen({ navigation }: any) {
 
   const handleTakePhoto = () => {
     console.log('Take photo');
-    launchCamera({ noData: true }, (response) => {
+    launchCamera(options, (response) => {
       handleImagePickerResponse(response, setPhoto).then(() => {
         setDocumentUploadReady(true);
       });

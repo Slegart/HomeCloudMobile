@@ -20,7 +20,7 @@ const PreferencesScreen = ({ navigation }: any) => {
   async function LoadSettings() {
     setSettingsLoading(true);
     try {
-      const response = await axiosInstance.get(UrlParser('/settings/GetSettings'), {
+      const response = await axiosInstance.get('/settings/GetSettings', {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
@@ -63,9 +63,9 @@ const PreferencesScreen = ({ navigation }: any) => {
   };
 
   const ChangeTokenDuration = (value: number) => {
-    setSessionDuration(parseInt(value));
+    setSessionDuration(parseInt(value.toString()));
     let duration = 600;
-    switch (parseInt(value)) {
+    switch (parseInt(value.toString())) {
       case 1:
         duration = 600;
         break;
@@ -154,7 +154,7 @@ const PreferencesScreen = ({ navigation }: any) => {
     maximumValue={6}
     step={1}
     value={sessionDuration}
-    onValueChange={(value) => { ChangeTokenDuration(value); }}
+    onValueChange={(value) => { ChangeTokenDuration(value[0]); }}
   ></Slider>
   <Text style={styles.label}>
     {sessionDuration === 1 ? "10 minutes"

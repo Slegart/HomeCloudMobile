@@ -3,8 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
 import * as mime from 'react-native-mime-types';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import BlobUtil from 'react-native-blob-util';
-import { UrlParser } from './UrlParser';
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 import { AuthUtils } from './AuthUtils';
 
 interface FileItemProps {
@@ -31,7 +30,7 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
 
   const GetVideoThumbnails = async (fileName:string) => {
     try {
-      const response = await axios.get(UrlParser(`/media/videothumbnails`), {
+      const response = await axiosInstance.get(`/media/videothumbnails`, {
         params: {
           fileType: 'videos',
           fileName: fileName,
@@ -41,7 +40,8 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
         },
       });
     
-      const imageDataObject = {};
+      const imageDataObject: { [key: string]: any } = {};
+      
       imageDataObject[fileName] = response.data
       setImageData(imageDataObject);
     } catch (error) {

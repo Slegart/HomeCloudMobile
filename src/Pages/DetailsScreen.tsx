@@ -15,7 +15,7 @@ const DetailsScreen = ({ navigation }:any) => {
     try {
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axiosInstance.get(UrlParser('/media/FilesLength'),
+      const response = await axiosInstance.get('/media/FilesLength',
         {
           headers:
           {

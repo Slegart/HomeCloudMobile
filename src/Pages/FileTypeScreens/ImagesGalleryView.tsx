@@ -2,19 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, Image, StyleSheet, Text, ActivityIndicator, Dimensions } from 'react-native';
 import { ImageGallery } from '@georstat/react-native-image-gallery';
 import { AuthUtils } from '../../Utils/AuthUtils';
-import axios from 'axios';
 import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
 
 const ImagesGalleryView = ({ route }: any) => {
   const { totalImages, totalVideos, totalOther } = route.params;
 
-  const [imagesLinks, setImagesLinks] = useState<string[]>([]);
-  const [imagesLinksThumbNails, setImagesLinksThumbNails] = useState<string[]>([]);
+  const [imagesLinks, setImagesLinks] = useState<{ id: number, url: string }[]>([]);
+  const [imagesLinksThumbNails, setImagesLinksThumbNails] = useState<{ id: number, url: string }[]>([]);
 
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [thumbNailImages, setThumbNailImages] = useState<any[]>([]);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const PageSize = 10;
@@ -31,7 +30,7 @@ const ImagesGalleryView = ({ route }: any) => {
 
       setLoading(true);
 
-      const imageNamesRes = await axiosInstance.get(UrlParser(`/media/GetFileNames`), {
+      const imageNamesRes = await axiosInstance.get(`/media/GetFileNames`, {
         params: {
           fileType: 'images',
           PageNo: currentPage,
@@ -52,7 +51,7 @@ const ImagesGalleryView = ({ route }: any) => {
       const imageLinksThumb = await imageNamesRes.data.map((image: string, index: number) => ({
         id: index + 1,
         url: `${domain}?fileName=${image}&IsThumbnail=true&fileType=${fileType}&Bearer${Token}`,
-        
+
       }));
 
       const imageLinks = await imageNamesRes.data.map((image: string, index: number) => ({
@@ -62,8 +61,8 @@ const ImagesGalleryView = ({ route }: any) => {
 
       setImagesLinksThumbNails((prevImagesT) => [...prevImagesT, ...imageLinksThumb]);
       setImagesLinks((prevImages) => [...prevImages, ...imageLinks]);
-      console.log("imageLinks:",imageLinks)
-      console.log("imageLinksThumb:",imageLinksThumb)
+      console.log("imageLinks:", imageLinks)
+      console.log("imageLinksThumb:", imageLinksThumb)
     } catch (error) {
       //console.error('Error fetching images:', error);
     } finally {
@@ -100,13 +99,16 @@ const ImagesGalleryView = ({ route }: any) => {
   const closeGallery = () => {
     setIsOpen(false);
   };
-
-  const GridItem = React.memo(({ item, onPress }) => (
+  interface GridItemProps {
+    item: any;
+    onPress: () => void;
+  }
+  const GridItem: React.FC<GridItemProps> = React.memo(({ item, onPress }) => (
     <TouchableOpacity onPress={onPress}>
       <Image source={{ uri: item.url }} style={styles.gridItem} />
     </TouchableOpacity>
   ));
-  
+
   const renderGridItem = ({ item, index }: any) => (
     <GridItem item={item} onPress={() => openGallery(index)} />
   );
@@ -122,10 +124,9 @@ const ImagesGalleryView = ({ route }: any) => {
 
   useEffect(() => {
 
-    if(initialIndex===null){ return; }
-    if(galleryImages.length<0){ return; }
-    if(initialIndex%PageSize===PageSize-1 && !LastPageLoaded && totalImages>initialIndex+1)
-    {
+    if (initialIndex === null) { return; }
+    if (galleryImages.length < 0) { return; }
+    if (initialIndex % PageSize === PageSize - 1 && !LastPageLoaded && totalImages > initialIndex + 1) {
       //console.log("loading next page")
       setPage((prevPage) => prevPage + 1);
       getImages(page + 1);
@@ -154,7 +155,7 @@ const ImagesGalleryView = ({ route }: any) => {
         close={closeGallery}
         isOpen={isOpen}
         images={galleryImages}
-        initialIndex={initialIndex|| undefined}
+        initialIndex={initialIndex || undefined}
         onIndexChange={(index: number) => setInitialIndex(index)}
       />
     </View>

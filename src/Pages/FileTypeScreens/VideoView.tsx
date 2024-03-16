@@ -1,6 +1,5 @@
 import React, { useState, useEffect,useCallback } from 'react';
 import { View, FlatList, ActivityIndicator, StyleSheet, Dimensions, ToastAndroid, Platform, Image } from 'react-native';
-import axios from 'axios';
 import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
 import { AuthUtils } from '../../Utils/AuthUtils';
@@ -26,7 +25,7 @@ const VideoView = ({ route }: any) => {
   const GetVideoFiles = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(UrlParser(`/media/GetFileNames`), {
+      const response = await axiosInstance.get(`/media/GetFileNames`, {
         params: {
           fileType: 'videos',
           PageNo: currentPage,
@@ -67,7 +66,7 @@ const VideoView = ({ route }: any) => {
   const DownloadFile = async (fileName: string) => {
     try {
       console.log('Downloading file:', fileName);
-      const response = await axiosInstance.get(UrlParser(`/media/serveFile`), {
+      const response = await axiosInstance.get(`/media/serveFile`, {
         params: {
           fileName: fileName,
           fileType: 'videos',
