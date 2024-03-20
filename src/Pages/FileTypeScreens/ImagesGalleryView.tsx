@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, Image, StyleSheet, Text, ActivityIndicator, Dimensions } from 'react-native';
+import React from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ImageGallery } from '@georstat/react-native-image-gallery';
 import { AuthUtils } from '../../Utils/AuthUtils';
 import axiosInstance from '../../Utils/axiosInstance';
@@ -29,7 +30,7 @@ const ImagesGalleryView = ({ route }: any) => {
       }
 
       setLoading(true);
-
+      const url = await UrlParser();
       const imageNamesRes = await axiosInstance.get(`/media/GetFileNames`, {
         params: {
           fileType: 'images',
@@ -38,7 +39,8 @@ const ImagesGalleryView = ({ route }: any) => {
         },
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT()
-        }
+        },
+        baseURL:url
       });
 
       if (page * PageSize >= totalImages) {
@@ -47,16 +49,17 @@ const ImagesGalleryView = ({ route }: any) => {
 
       const Token = await AuthUtils.GetJWT();
       const fileType = 'images';
-      const domain = await UrlParser('/media/serveImage');
+      const domain = await UrlParser()+'/media/serveImage'
       const imageLinksThumb = await imageNamesRes.data.map((image: string, index: number) => ({
         id: index + 1,
-        url: `${domain}?fileName=${image}&IsThumbnail=true&fileType=${fileType}&Bearer${Token}`,
-
+        url: `${domain}?fileName=${image}&IsThumbnail=true&fileType=${fileType}`,
+        Headers: { Authorization: 'Bearer ' + Token }
       }));
 
       const imageLinks = await imageNamesRes.data.map((image: string, index: number) => ({
         id: index + 1,
-        url: `${domain}?fileName=${image}&IsThumbnail=false&fileType=${fileType}&Bearer${Token}`,
+        url: `${domain}?fileName=${image}&IsThumbnail=false&fileType=${fileType}`,
+        Headers : { Authorization: 'Bearer ' + Token }
       }));
 
       setImagesLinksThumbNails((prevImagesT) => [...prevImagesT, ...imageLinksThumb]);
@@ -76,18 +79,25 @@ const ImagesGalleryView = ({ route }: any) => {
     }
   }, [totalImages, page]);
 
-  useEffect(() => {
+  async function getimgs() {
+        const Token = await AuthUtils.GetJWT();
     const formattedImages = imagesLinks.map((image, index) => ({
       id: `${index + 1}`,
-      url: image.url,
+      url: image.url + `&Authorization=Bearer=${Token}`,
+      Headers : { Authorization: 'Bearer ' + Token }
       //thumbUrl: imagesLinksThumbNails[index].url,
     }));
     const SmallImagesFormatted = imagesLinksThumbNails.map((image, index) => ({
       id: `${index + 1}`,
-      url: image.url,
+      url: image.url + `&Authorization=Bearer=${Token}`,
+      Headers : { Authorization: 'Bearer ' + Token }
     }));
     setThumbNailImages(SmallImagesFormatted);
     setGalleryImages(formattedImages);
+  }
+
+  useEffect(() => {
+    getimgs();
   }, [imagesLinks]);
 
   const openGallery = (index: number) => {

@@ -23,6 +23,7 @@ const DocumentsView = ({ route }: any) => {
   const fetchDocuments = async () => {
     setLoading(true);
     try {
+      const url = await UrlParser()
       const response = await axiosInstance.get(`/media/GetFileNames`, {
         params: {
           fileType: 'other',
@@ -32,6 +33,7 @@ const DocumentsView = ({ route }: any) => {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
+        baseURL:url
       });
       setDocuments(prevDocuments => [...prevDocuments, ...response.data]);
     } catch (error) {
@@ -64,6 +66,7 @@ const DocumentsView = ({ route }: any) => {
   const DownloadFile = async (fileName: string) => {
     try {
       console.log('Downloading file:', fileName);
+      const url = await UrlParser()
       const response = await axiosInstance.get(`/media/serveFile`, {
         params: {
           fileName: fileName,
@@ -72,6 +75,7 @@ const DocumentsView = ({ route }: any) => {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
+        baseURL:url
       });
 
       const downloadsDirectory =RNFS.DownloadDirectoryPath;
