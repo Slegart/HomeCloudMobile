@@ -1,10 +1,6 @@
 import React from 'react';
-import type { PropsWithChildren } from 'react';
-import axios from 'axios';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { UrlParser } from './src/Utils/UrlParser.ts';
 
 import HomeScreen from './src/Pages/HomeScreen.tsx'
 import DetailsScreen from './src/Pages/DetailsScreen.tsx'
@@ -15,6 +11,9 @@ import DocumentsView from './src/Pages/FileTypeScreens/DocumentsView.tsx';
 import SettingsScreen from './src/Pages/SettingsScreen.tsx';
 import PreferencesScreen from './src/Pages/PreferencesScreen.tsx';
 import VideoView from './src/Pages/FileTypeScreens/VideoView.tsx';
+import InitialConnectionScreen from './src/Pages/InitialConnectionScreen.tsx';
+import RestartApp from './src/Utils/RestartApp.tsx';
+import SetConfigPage from './src/Pages/SetConfigPage.tsx';
 function App(): React.JSX.Element {
 
   const Stack = createNativeStackNavigator();
@@ -22,6 +21,7 @@ function App(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen name="SetConfig" component={SetConfigPage} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Details" component={DetailsScreen} />
         <Stack.Screen name="Main" component={MainScreen} />
@@ -31,6 +31,8 @@ function App(): React.JSX.Element {
         <Stack.Screen name="Documents" component={DocumentsView} />
         <Stack.Screen name="Preferences" component={PreferencesScreen} />
         <Stack.Screen name="Video" component={VideoView} />
+        <Stack.Screen name="InitialConnection" component={InitialConnectionScreen} />
+        <Stack.Screen name="Restart" component={RestartApp} />
       </Stack.Navigator>
     </NavigationContainer>
   );
