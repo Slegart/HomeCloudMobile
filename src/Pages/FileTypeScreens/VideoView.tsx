@@ -25,6 +25,7 @@ const VideoView = ({ route }: any) => {
   const GetVideoFiles = async () => {
     setLoading(true);
     try {
+      const url = await UrlParser()
       const response = await axiosInstance.get(`/media/GetFileNames`, {
         params: {
           fileType: 'videos',
@@ -34,6 +35,7 @@ const VideoView = ({ route }: any) => {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
+        baseURL:url
       });
     setVideos(prevVideos => [...prevVideos, ...response.data]);
     } catch (error) {
@@ -66,6 +68,7 @@ const VideoView = ({ route }: any) => {
   const DownloadFile = async (fileName: string) => {
     try {
       console.log('Downloading file:', fileName);
+      const url = await UrlParser()
       const response = await axiosInstance.get(`/media/serveFile`, {
         params: {
           fileName: fileName,
@@ -74,6 +77,7 @@ const VideoView = ({ route }: any) => {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
+        baseURL:url
       });
 
       const downloadsDirectory = RNFS.DownloadDirectoryPath;

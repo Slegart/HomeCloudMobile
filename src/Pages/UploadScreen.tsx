@@ -8,6 +8,7 @@ import axiosInstance from '../Utils/axiosInstance';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import DocSize from '../Utils/DocSize';
+import { UrlParser } from '../Utils/UrlParser';
 const createFormData = async (file: any, type: string) => {
   const data = new FormData();
   console.log('File:', file);
@@ -53,12 +54,13 @@ const handleUpload = async (file: any, setFile: any, type: string) => {
   try {
     const token = await AuthUtils.GetJWT();
     const data = await createFormData(file, type);
-
+    const url = await UrlParser()
     const response = await axiosInstance.post('/media/upload', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
       },
+      baseURL:url
     });
 
     if (response.data === "Success") {
@@ -119,6 +121,8 @@ export default function UploadScreen({ navigation }: any) {
       const result = await DocumentPicker.pick({
         type: [DocumentPicker.types.allFiles],
       });
+      const loading = DocumentPicker.isInProgress;
+      console.log('Document loading:', loading);
       console.log('Document selected:', result);
       setDocument(result[0] || null);
     } catch (err) {
@@ -223,7 +227,7 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: '60%',
+    height: '50%',
     marginBottom: 10,
     borderRadius: 10,
   },
@@ -277,5 +281,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 10,
   },
 });

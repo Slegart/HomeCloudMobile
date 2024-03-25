@@ -1,7 +1,9 @@
 import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { ImageGallery } from '@georstat/react-native-image-gallery';
+//import { ImageGallery } from '@georstat/react-native-image-gallery';
+import ImageGallery  from '../../GalleryView/ImageGallery.tsx';
+
 import { AuthUtils } from '../../Utils/AuthUtils';
 import axiosInstance from '../../Utils/axiosInstance';
 import { UrlParser } from '../../Utils/UrlParser';
@@ -187,6 +189,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: 10,
     fontWeight: 'bold',
+    color: 'black',
   },
   loadingContainer: {
     position: 'absolute',

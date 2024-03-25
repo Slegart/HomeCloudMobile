@@ -2,11 +2,9 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ResponseHandler } from './ResponseHandler';
 import { ErrorHandler } from './ErrorHandler';
 import { InternalAxiosRequestConfig } from 'axios';
-const port = 5000;
+
 const axiosInstance: AxiosInstance = axios.create(
-    {
-        baseURL: 'http://192.168.1.3:' + port,
-    }
+
 );
 
 axiosInstance.interceptors.request.use(function (config: InternalAxiosRequestConfig<any>) {

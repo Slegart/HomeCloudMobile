@@ -5,6 +5,7 @@ import AntIcon from 'react-native-vector-icons/AntDesign';
 import BlobUtil from 'react-native-blob-util';
 import axiosInstance from './axiosInstance';
 import { AuthUtils } from './AuthUtils';
+import { UrlParser } from './UrlParser';
 
 interface FileItemProps {
   fileName: string;
@@ -30,6 +31,7 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
 
   const GetVideoThumbnails = async (fileName:string) => {
     try {
+      const url = await UrlParser()
       const response = await axiosInstance.get(`/media/videothumbnails`, {
         params: {
           fileType: 'videos',
@@ -38,6 +40,7 @@ const VideoItem: React.FC<FileItemProps> = ({ fileName, onPress }) => {
         headers: {
           Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
         },
+        baseURL:url
       });
     
       const imageDataObject: { [key: string]: any } = {};

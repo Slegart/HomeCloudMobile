@@ -15,12 +15,14 @@ const DetailsScreen = ({ navigation }:any) => {
     try {
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
+      const url = await UrlParser()
       const response = await axiosInstance.get('/media/FilesLength',
         {
           headers:
           {
             Authorization: 'Bearer ' + token
-          }
+          },
+          baseURL:url
         });
       //Images: 0, Videos: 0, Other: 0
       setTotalImages(response.data.Images);

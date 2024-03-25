@@ -1,17 +1,19 @@
 import axiosInstance from '../Utils/axiosInstance';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, ToastAndroid, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ToastAndroid, Button, Alert } from 'react-native';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import { AuthUtils } from '../Utils/AuthUtils';
 import DocSize from '../Utils/DocSize';
-export default function SettingsScreen ({ navigation }: any) {
+import { UrlParser } from '../Utils/UrlParser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import PieChartComp from '../Utils/PieChartComp';
+export default function SettingsScreen({ navigation }: any) {
     const [isDropdownVisible, setDropdownVisible] = useState(false);
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
     const [isCancelAvailable, setCancelAvailable] = useState(false);
     const [showDeleteButton, setShowDeleteButton] = useState(false);
     const [itemStatsVisible, setItemStatsVisible] = useState(false);
     const [EditPreferencesVisible, setEditPreferencesVisible] = useState(true);
-    const [documents, setDocuments] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [ImagesSize, setImagesSize] = useState("");
@@ -20,27 +22,20 @@ export default function SettingsScreen ({ navigation }: any) {
 
     useEffect(() => {
         const fetchDocuments = async () => {
-        setLoading(true);
-        try {
-            const response = await axiosInstance.get(`/media/GetAllFilesStats`, {
-                headers: {
-                    Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
-                },
-            });
-            console.log('Response:', response.data);
-            setImagesSize(DocSize(response.data.Images));
-            setVideosSize(DocSize(response.data.Videos));
-            setDocumentsSize(DocSize(response.data.Other));
-            setDocuments(response.data);
-        } catch (error) {
-            //console.error('Error fetching documents:', error);
-        } finally {
-            setLoading(false);
-        }
+            setLoading(true);
+            try {
+                setImagesSize(await AsyncStorage.getItem('Images') || "");
+                setVideosSize(await AsyncStorage.getItem('Videos') || "");
+                setDocumentsSize(await AsyncStorage.getItem('Other') || "");
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+            } finally {
+                setLoading(false);
+            }
         };
-    
+
         fetchDocuments();
-      }, []);
+    }, []);
 
     const dropdownOptions = ['Images', 'Videos', 'Documents', 'All'];
 
@@ -50,7 +45,7 @@ export default function SettingsScreen ({ navigation }: any) {
         setEditPreferencesVisible(false);
     };
 
-    const OptionPress = (option:string) => {
+    const OptionPress = (option: string) => {
         setSelectedValue(option);
         setItemStatsVisible(true);
         setDropdownVisible(false);
@@ -59,21 +54,22 @@ export default function SettingsScreen ({ navigation }: any) {
         }
     };
 
-    const showToast = (Message:string) => {
+    const showToast = (Message: string) => {
         ToastAndroid.show(Message, ToastAndroid.SHORT);
-      };
-    const DeleteItems = async() => {
+    };
+    const DeleteItems = async () => {
         setLoading(true);
         try {
-            if(selectedValue)
-            {
+            if (selectedValue) {
+                const url = await UrlParser()
                 const response = await axiosInstance.get('/media/deleteAllFiles', {
                     params: {
                         fileType: (selectedValue as string).toLowerCase()
                     },
                     headers: {
-                        "Authorization" : "Bearer " + await AuthUtils.GetJWT()
-                    }
+                        "Authorization": "Bearer " + await AuthUtils.GetJWT()
+                    },
+                    baseURL: url
                 });
                 if (response.data === 'Success') {
                     setSelectedValue(null);
@@ -86,46 +82,121 @@ export default function SettingsScreen ({ navigation }: any) {
         } finally {
             setLoading(false);
         }
+    }
+    const Shutdown = async () => {
+        try {
+            Alert.alert(
+                'Confirmation',
+                'Are you sure you want to shut down?',
+                [
+                    {
+                        text: 'Cancel',
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Shut Down',
+                        onPress: async () => {
+                            try {
+                                const url = await UrlParser()
+                                await axiosInstance.get('/ssh/shutdown', {
+                                    headers: {
+                                        "Authorization": "Bearer " + await AuthUtils.GetJWT()
+                                    }
+                                    , baseURL: url
+                                });
+                                navigation.navigate('Home');
+                            } catch (error) {
+                                console.error('Error shutting down:', error);
+                            }
+                        },
+                        style: 'destructive'
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error('Error shutting down:', error);
+        }
+    }
 
+    const DeleteToken = async () => {
+        Alert.alert(
+            'Confirmation',
+            'Are you sure you want to end session?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'End',
+                    onPress: async () => {
+                        await AsyncStorage.removeItem('token');
+                        navigation.navigate('Home');
+                    },
+                    style: 'destructive'
+                }
+            ]
+        );
     }
 
     return (
         <>
+          <PieChartComp />
+        
             <View style={styles.container}>
-                <Text>Delete Files</Text>
+                <Text style={{fontStyle: 'italic', color: 'black'}}>Delete Files</Text>
                 <TouchableOpacity style={styles.dropdownButton} onPress={handleDropdownPress}>
-                    <Text>{selectedValue || 'Select a directory'}</Text>
+                    <Text style={{fontStyle: 'italic', color: 'black'}}> {selectedValue || 'Select a directory'}</Text>
                 </TouchableOpacity>
 
                 {itemStatsVisible && (
-                <>
-               
-                {selectedValue === 'Images' && (
-                    <View style={styles.horizontalContainer}>
-                        <Text>Images: {ImagesSize}</Text>
-                    </View>
-                )}
-                {selectedValue === 'Videos' && (
-                    <View style={styles.horizontalContainer}>
-                        <Text>Videos: {VideosSize}</Text>
-                    </View>
-                )}
-                {selectedValue === 'Documents' && (
-                    <View style={styles.horizontalContainer}>
-                        <Text>Documents: {DocumentsSize}</Text>
-                    </View>
-                )}
-                {selectedValue === 'All' && (
-                    <View style={styles.container}>
-                        <Text>Images: {ImagesSize}</Text>
-                        <Text>Videos: {VideosSize}</Text>
-                        <Text>Documents: {DocumentsSize}</Text>
-                    </View>
-                )}
-                </>
-            )}
-            </View>
+                    <>
 
+                        {selectedValue === 'Images' && (
+                            <View style={styles.verticalContainer}>
+                                <Text>Images: {DocSize(parseInt(ImagesSize))}</Text>
+                            </View>
+                        )}
+                        {selectedValue === 'Videos' && (
+                            <View style={styles.verticalContainer}>
+                                <Text>Videos: {DocSize(parseInt(VideosSize))}</Text>
+                            </View>
+                        )}
+                        {selectedValue === 'Documents' && (
+                            <View style={styles.verticalContainer}>
+                                <Text>Documents: {DocSize(parseInt(DocumentsSize))}</Text>
+                            </View>
+                        )}
+                        {selectedValue === 'All' && (
+                            <View style={styles.verticalContainer}>
+                                <Text>Images: {DocSize(parseInt(ImagesSize))}</Text>
+                                <Text>Videos: {DocSize(parseInt(VideosSize))}</Text>
+                                <Text>Documents: {DocSize(parseInt(DocumentsSize))}</Text>
+                            </View>
+                        )}
+                    </>
+                )}
+            </View>
+            { EditPreferencesVisible&&<View style={styles.FooterButtons}>
+                <View style={styles.container}>
+                    <Text>Shut Down</Text>
+                    <TouchableOpacity onPress={Shutdown}>
+                        <AntIcon name="poweroff" size={65}  color={"black"} />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.container}>
+                    <Text>End Session</Text>
+                    <TouchableOpacity onPress={DeleteToken}>
+                        <AntIcon name="logout" size={65}  color={"black"} />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.container}>
+                    <Text>Back</Text>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <AntIcon name="back" size={65} color={"black"} />
+                    </TouchableOpacity>
+                </View>
+            </View>}
 
             {showDeleteButton && (
                 <View style={styles.FooterButtons}>
@@ -155,10 +226,12 @@ export default function SettingsScreen ({ navigation }: any) {
                             <Text style={styles.buttonText}>Cancel</Text>
                         </View>
                     </TouchableOpacity>
+
+                    
                 </View>
             )}
 
-          
+
 
             <Modal visible={isDropdownVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
@@ -173,19 +246,20 @@ export default function SettingsScreen ({ navigation }: any) {
                     ))}
                     {isCancelAvailable && (
                         <TouchableOpacity
-                            style={styles.CancelButton}
-                            onPress={() => {setDropdownVisible(false); setItemStatsVisible(false); setCancelAvailable(false); setEditPreferencesVisible(true);} }
+                            style={styles.modalOption}
+                            onPress={() => { setDropdownVisible(false); setItemStatsVisible(false); setCancelAvailable(false); setEditPreferencesVisible(true); }}
                         >
-                            <Text>Cancel</Text>
+                            <Text style={{ fontSize: 25 }}>Cancel</Text>
                         </TouchableOpacity>
                     )}
                 </View>
             </Modal>
 
-            {EditPreferencesVisible && <View>
-            <Button title="Edit Preferences" onPress={() => navigation.navigate('Preferences')} />
+            {EditPreferencesVisible && <View style = {{padding:10, width: '50%', alignSelf: 'center'}}>
+                <Button title="Edit Preferences" onPress={() => navigation.navigate('Preferences')} />
             </View>}
 
+              
         </>
 
     );
@@ -194,20 +268,19 @@ export default function SettingsScreen ({ navigation }: any) {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 50,
+   
+        paddingHorizontal: 20,
     },
     FooterButtons: {
         backgroundColor: 'white',
-        paddingVertical: 10,
-       
+ 
         flexDirection: 'row',
-        paddingHorizontal: 20, 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        position: 'absolute', 
-        bottom: 0, 
-        width: '100%', 
-    
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+
     },
     horizontalContainer: {
         flexDirection: 'row',
@@ -216,7 +289,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: '20%',
         width: '100%',
-        padding: 10,
+        padding: 50,
     },
     button: {
         flexDirection: 'row',
@@ -241,6 +314,7 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         padding: 10,
         marginTop: 10,
+        color: 'black',
     },
     modalContainer: {
         flex: 1,

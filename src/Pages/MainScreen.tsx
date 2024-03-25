@@ -7,22 +7,45 @@ import AntIcon from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthUtils } from '../Utils/AuthUtils';
 import { UrlParser } from '../Utils/UrlParser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export default function MainScreen({ navigation }: any) {
   const [TotalImages, setTotalImages] = useState(0);
   const [TotalVideos, setTotalVideos] = useState(0);
   const [TotalOther, setTotalOther] = useState(0);
+  
 
-
+  async function GetStorageSpace() {
+    try {
+      const url = await UrlParser();
+      console.log('Getting storage space:', url);
+      const response = await axiosInstance.get('/media/getstoragespace', 
+      { 
+        baseURL: url,
+      responseType: 'json' 
+      });
+      const storageSpaceData = response.data;
+      console.log('Storage space:', response);
+      // Store each item in AsyncStorage
+      await AsyncStorage.setItem('totalSpace', (response.data.TotalSpace*1000).toString());
+      await AsyncStorage.setItem('usedSpace', (response.data.UsedSpace*1000).toString());
+      await AsyncStorage.setItem('freeSpace', (response.data.FreeSpace*1000).toString());
+    } catch (error) {
+      console.error('Error getting storage space:', error);
+    }
+  }
   const GetDocumentsSize = async () => {
     try {
       const token = await AuthUtils.GetJWT();
       if (token === null) return;
-      const response = await axiosInstance.get(`/media/FilesLength`, 
+      const url = await UrlParser()
+      const response = await axiosInstance.get(`/media/FilesLength`,
         {
           headers:
           {
             Authorization: 'Bearer ' + token
-          }
+          },
+          baseURL: url
         });
       //Images: 0, Videos: 0, Other: 0
       setTotalImages(response.data.Images);
@@ -32,6 +55,28 @@ export default function MainScreen({ navigation }: any) {
     catch (error) { console.log(error) }
   }
 
+  const GetAllFileStats = async () => {
+    try
+    {
+    const url = await UrlParser();
+      const responsefilestats = await axiosInstance.get(`/media/GetAllFilesStats`, { 
+        headers: {
+            Authorization: 'Bearer ' + await AuthUtils.GetJWT(),
+        },
+        responseType: 'json',
+        baseURL: url
+    });
+    console.log("GetAllFilesStats ",responsefilestats.data)
+    AsyncStorage.setItem('Images', responsefilestats.data.Images.toString());
+    AsyncStorage.setItem('Videos', responsefilestats.data.Videos.toString());
+    AsyncStorage.setItem('Other', responsefilestats.data.Other.toString());
+
+    }
+    catch (error) {
+      console.error('Error getting all file stats:', error);
+    }
+  }
+
   const Start = async () => {
     await GetDocumentsSize();
   }
@@ -39,6 +84,8 @@ export default function MainScreen({ navigation }: any) {
   useFocusEffect(
     React.useCallback(() => {
       Start();
+      GetStorageSpace();
+      GetAllFileStats();
       return () => {
       };
     }, [])
@@ -59,34 +106,34 @@ export default function MainScreen({ navigation }: any) {
 
       {/* Gallery */}
       <View style={styles.galleryVideoContainer}>
-      {/* Gallery */}
-      <TouchableOpacity
-        style={[styles.button, { flex: 1 }]}
-        onPress={() => navigation.navigate('ImagesGallery', { totalImages: TotalImages })}
-      >
-        <View style={styles.buttonContainer}>
-          <MaterialCommunityIcons name="view-gallery-outline" size={50} color="white" />
-          <Text style={styles.buttonText}>Cloud Gallery</Text>
-        </View>
-      </TouchableOpacity>
+        {/* Gallery */}
+        <TouchableOpacity
+          style={[styles.button, { flex: 1 }]}
+          onPress={() => navigation.navigate('ImagesGallery', { totalImages: TotalImages })}
+        >
+          <View style={styles.buttonContainer}>
+            <MaterialCommunityIcons name="view-gallery-outline" size={50} color="white" />
+            <Text style={styles.buttonText}>Cloud Gallery</Text>
+          </View>
+        </TouchableOpacity>
 
-      {/* Video */}
-      <TouchableOpacity
-        style={[styles.button, { flex: 1 }]}
-        onPress={() => navigation.navigate('Video', { totalVideos: TotalVideos})}
-      >
-        <View style={styles.buttonContainer}>
-          <AntIcon name="videocamera" size={50} color="white" />
-          <Text style={styles.buttonText}>Video</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
+        {/* Video */}
+        <TouchableOpacity
+          style={[styles.button, { flex: 1 }]}
+          onPress={() => navigation.navigate('Video', { totalVideos: TotalVideos })}
+        >
+          <View style={styles.buttonContainer}>
+            <AntIcon name="videocamera" size={50} color="white" />
+            <Text style={styles.buttonText}>Video</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
 
 
       {/* Documents */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Documents' , { totalOther: TotalOther })}
+        onPress={() => navigation.navigate('Documents', { totalOther: TotalOther })}
       >
         <View style={styles.verticalContainer}>
           <AntIcon name="filetext1" size={50} color="white" />
@@ -104,7 +151,7 @@ export default function MainScreen({ navigation }: any) {
           <Text style={styles.buttonText}>Settings</Text>
         </View>
       </TouchableOpacity>
-
+ 
     </View>
   );
 }

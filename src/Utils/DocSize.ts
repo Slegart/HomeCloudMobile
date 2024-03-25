@@ -9,7 +9,11 @@ const DocSize = (size: number) => {
     if (size < 1024 * 1024 * 1024) {
         return `${(size / (1024 * 1024)).toFixed(2)} MB`;
     }
-    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    if(size < 1024 * 1024 * 1024 * 1024){
+        return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    
+    }
+    return `${(size / (1024 * 1024 * 1024 * 1024)).toFixed(2)} TB`;
 
   }
   export default DocSize;

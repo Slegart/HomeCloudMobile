@@ -246,7 +246,7 @@ const PreferencesScreen = ({ navigation }: any) => {
             <View style={{ marginLeft: 25 }}>
               <Tooltip
                 isVisible={toolTipVisible[0].visible}
-                content={<Text>Save image thumbnails in disk or process at runtime.</Text>}
+                content={<Text style={{fontStyle: 'italic', color: 'black'}}>Save image thumbnails in disk or process at runtime.</Text>}
                 placement='bottom'
                 onClose={() => setToolTipVisible([{ visible: false }, { visible: false }, { visible: false }])}
               >
@@ -271,7 +271,7 @@ const PreferencesScreen = ({ navigation }: any) => {
             <View style={{ marginLeft: 25 }}>
               <Tooltip
                 isVisible={toolTipVisible[1].visible}
-                content={<Text>Whether you want to display full size images in gallery view or not.
+                content={<Text style={{fontStyle: 'italic', color: 'black'}}>Whether you want to display full size images in gallery view or not.
                   Big images take time to load, downloading will still download original size.</Text>}
                 placement='bottom'
                 onClose={() => setToolTipVisible([{ visible: false }, { visible: false }, { visible: false }])}
@@ -286,7 +286,7 @@ const PreferencesScreen = ({ navigation }: any) => {
           </View>
 
           <View style={styles.switchContainer}>
-            <Text style={styles.label}>HTTPs Enabled                            </Text>
+            <Text style={styles.label}>HTTPs Enabled                           </Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               thumbColor={HTTPSEnabled ? "#f4f3f4" : "#f4f3f4"}
@@ -297,7 +297,7 @@ const PreferencesScreen = ({ navigation }: any) => {
             <View style={{ marginLeft: 25 }}>
               <Tooltip
                 isVisible={toolTipVisible[2].visible}
-                content={<Text>In order to use HTTPS you must first import your CA provided SSL certificate to server.
+                content={<Text style={{fontStyle: 'italic', color: 'black'}}>In order to use HTTPS you must first import your CA provided SSL certificate to server.
                   In order for self signed certificate to work, you must import the certificate to your device's trusted credentials.
                 </Text>}
                 placement='bottom'
@@ -312,7 +312,7 @@ const PreferencesScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          <View style={styles.switchContainer}>
+          {/* <View style={styles.switchContainer}>
             <Text style={styles.label}>Port</Text>
            {!SettingsLoading&& <TextInput
               {...(PortValid ? { style: styles.NumberText } : { style: styles.InvalidNumberText })}
@@ -322,7 +322,7 @@ const PreferencesScreen = ({ navigation }: any) => {
               value={Port}
             />}
 
-          </View>
+          </View> */}
           {!PortValid && <Text style={styles.InvalidNumberText}>{PortValidMessage}</Text>}
           <View style={styles.Slidercontainer}>
             <Text style={styles.label}>Session Duration</Text>
