@@ -1,4 +1,26 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Home cloud Mobile
+- Access/View/Delete/Download your files in your virtual machine from mobile device. 
+- Supported file formats jpeg/png/jpg - mp4/mp3/mov - pdf/docx/txt/xlsx/pptx/csv/zip/rar/7z/tar/gz/bz2/xz/xml
+
+# Important
+
+- In order to use this app you need the Home Cloud Server running in your virtual machine
+- https://github.com/Slegart/HomeCloudServer
+
+# Images
+
+<div style="display: inline-block;">
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_1.jpeg" width="200" height="400" />
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_2.jpeg" width="200" height="400" />
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_3.jpeg" width="200" height="400" />
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_4.jpeg" width="200" height="400" />
+
+</div>
+<div style="display: inline-block;">
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_5.jpeg" width="200" height="400" />
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_6.jpeg" width="200" height="400" />
+    <img src="https://github.com/Slegart/HomeCloudMobile/blob/main/Preview/preview_7.jpeg" width="200" height="400" />
+</div>
 
 # Getting Started
 
@@ -32,7 +54,7 @@ npm run android
 yarn android
 ```
 
-### For iOS
+### For iOS (Not finished yet)
 
 ```bash
 # using npm
